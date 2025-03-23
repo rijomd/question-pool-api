@@ -2,6 +2,7 @@ package com.questions.backend.filters;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,11 @@ public class Filter {
 
     public Filter(LocalDateTime value, FilterType filterType) {
         this.value = value.format(dateTimeFormatter);
+        this.filterType = filterType;
+    }
+
+    public Filter(String[] value, FilterType filterType) {
+        this.value = (value == null || value.length == 0) ? "" : Arrays.stream(value).collect(Collectors.joining(","));
         this.filterType = filterType;
     }
 

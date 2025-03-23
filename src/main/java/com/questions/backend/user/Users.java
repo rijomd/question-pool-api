@@ -51,6 +51,8 @@ public class Users implements UserDetails {
     private String resumeLink;
     private String yearOfExp;
     private Integer job_id;
+    private Integer question_pool_id;
+    private Integer score;
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;

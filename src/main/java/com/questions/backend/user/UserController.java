@@ -49,8 +49,13 @@ public class UserController {
 
     @PostMapping("/add")
     public ResponseEntity<Void> addJob(@RequestBody RegisterRequestDTO request) {
-        userService.add(request);
-        return ResponseEntity.ok().build();
+        try {
+            userService.add(request);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw e;
+        }
     }
 
     @PutMapping("/update")

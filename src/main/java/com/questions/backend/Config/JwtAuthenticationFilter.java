@@ -64,11 +64,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    request.setAttribute("userName", userEmail);
                 }
 
             }
             filterChain.doFilter(request, response);
-        } catch (AuthenticationException e) {
+        } catch (
+
+        AuthenticationException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("401 Unauthorized: " + e.getMessage());

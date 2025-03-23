@@ -33,25 +33,18 @@ public class QuestionRepository implements com.questions.backend.filters.Reposit
 
     @PostConstruct
     public void init() {
-        filterMap.put(FilterType.JOB_ID, "job_id = ?");
         filterMap.put(FilterType.TYPE, "type = ?");
         filterMap.put(FilterType.LEVEL, "level = ?");
-        filterMap.put(FilterType.QUESTION_NAME, "LIKE question_name = ?");
+        filterMap.put(FilterType.QUESTION_NAME, "question_name ILIKE ?");
+        filterMap.put(FilterType.JOB_ID, "CAST(qs.job_id AS INTEGER) = ?");
         filterMap.put(FilterType.CREATED_BY, "created_by = ?");
+        filterMap.put(FilterType.ID_LIST, "CAST(qs.id AS INTEGER) IN (?)");
 
         likeMap.put(FilterType.QUESTION_NAME, "");
     }
 
     public QuestionQuery query() {
         return new QuestionQuery(this);
-    }
-
-    public Map<FilterType, String> getLikeMap() {
-        return likeMap;
-    }
-
-    public void setLikeMap(Map<FilterType, String> likeMap) {
-        this.likeMap = likeMap;
     }
 
     @Override
@@ -64,20 +57,18 @@ public class QuestionRepository implements com.questions.backend.filters.Reposit
                     LEFT JOIN users us ON qs.created_by=us.id
                     """;
             String countSql = "SELECT COUNT(*) FROM questions";
-
-            FilterUtill filterUtill = new FilterUtill();
-            FilterUtill.FilterUtilDTO dto = filterUtill.new FilterUtilDTO();
+            FilterUtill.FilterUtilDTO dto = new FilterUtill().new FilterUtilDTO();
             dto.setFilters(filters);
             dto.setLimit(limit);
             dto.setOffset(offset);
+            dto.setFilterMap(filterMap);
             dto.setLikeMap(this.likeMap);
             dto.setRequirePrefix(true);
 
             sql = sql + filterUtil.generateWhereClause(dto);
-            if (filters.size() > 0) {
+            if (filters.size() > 0 && filters.get(0).getFilterType() != FilterType.ID_LIST) {
                 countSql = countSql + filterUtil.generateWhereClause(filterMap, filters, -1, -1);
             }
-
             var list = template.query(sql,
                     ps -> {
                         filterUtil.injectPreparedStatementValues(dto, ps);
@@ -123,6 +114,7 @@ public class QuestionRepository implements com.questions.backend.filters.Reposit
                     });
             return new PaginationList<>(list, total);
         } catch (Exception e) {
+            e.printStackTrace();
             System.out.println(e.getMessage());
             throw e;
         }

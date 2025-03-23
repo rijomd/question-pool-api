@@ -67,6 +67,8 @@ public class UserRepo implements com.questions.backend.filters.Repository<Users>
                             user.setUpdatedAt(resultSet.getTimestamp("updated_at"));
                             user.setRole(Role.fromString(resultSet.getString("role")));
                             user.setStatus(UserStatus.fromString(resultSet.getString("status")));
+                            user.setQuestion_pool_id(resultSet.getInt("question_pool_id"));
+                            user.setScore(resultSet.getInt("score"));
                             userList.add(user);
                         }
                         return userList;

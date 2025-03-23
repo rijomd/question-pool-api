@@ -42,4 +42,14 @@ public abstract class Query<E, T extends Repository<E>> {
     public PaginationList<E> findAllPagination(int offset, int limit) {
         return repository.findByFilters(filterList, offset, limit);
     }
+
+    public Query<E, T> findByIds(String[] ids) {
+        if (implemented.contains(FilterType.ID_LIST)) {
+            var filter = new Filter(Arrays.asList(ids), FilterType.ID_LIST);
+            filterList.add(filter);
+            return this;
+        } else {
+            throw new MissingFilterImplementationException(FilterType.ID_LIST, label);
+        }
+    }
 }

@@ -20,9 +20,9 @@ public class RegisterRequestDTO {
     private String email;
     private String password;
     private Role role;
-    private String resumeLink;
     private String yearOfExp;
     private Integer job_id;
     private UserStatus status;
     private MultipartFile file;
+    private Integer question_pool_id;
 }

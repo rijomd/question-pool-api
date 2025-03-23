@@ -1,5 +1,7 @@
 package com.questions.backend.auth;
 
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.questions.backend.Config.JwtService;
 import com.questions.backend.dto.RegisterRequestDTO;
+import com.questions.backend.user.Role;
 import com.questions.backend.user.UserRepository;
 import com.questions.backend.user.UserStatus;
 import com.questions.backend.user.Users;
@@ -43,7 +46,20 @@ public class AuthenticationService {
         Users user = userRepository.findByEmail(request.getEmail()).orElseThrow();
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
-        return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
+        ArrayList<String> menus = new ArrayList<String>();
+
+        if (user.getRole().equals(Role.CANDIDATES)) {
+            menus.add("answerPool");
+        } else {
+            menus.add("Dashboard");
+            menus.add("UserList");
+            menus.add("jobList");
+            menus.add("questionList");
+            menus.add("questionPool");
+        }
+        return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).menu_list(menus)
+                .users(user)
+                .build();
     }
 
 }

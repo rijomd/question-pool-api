@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class SecurityConfiguration {
 
-        private static final String[] WHITE_LIST_URL = { "/api/auth/**" };
+        private static final String[] WHITE_LIST_URL = { "/api/auth/**",  };
         private final AuthenticationProvider authenticationProvider;
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         // private final LogoutHandler logoutHandler;

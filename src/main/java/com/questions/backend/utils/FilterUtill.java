@@ -14,7 +14,6 @@ import com.questions.backend.filters.FilterType;
 
 import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -25,7 +24,6 @@ public class FilterUtill {
     @Data
     @Setter
     @Getter
-    @NoArgsConstructor
     public class FilterUtilDTO {
         private Map<FilterType, String> filterMap;
         private List<Filter> filters;
@@ -33,6 +31,18 @@ public class FilterUtill {
         private int limit;
         private Map<FilterType, String> likeMap;
         private Boolean requirePrefix;
+
+        public FilterUtilDTO() {
+            this.likeMap = new HashMap<>();
+        }
+
+        public Map<FilterType, String> getLikeMap() {
+            if (likeMap == null) {
+                likeMap = new HashMap<>();
+            }
+            return likeMap;
+        }
+
     }
 
     public static long countOccurrences(String value, char occurrence) {
@@ -50,6 +60,7 @@ public class FilterUtill {
         return result;
     }
 
+    // old ones
     public String generateWhereClause(Map<FilterType, String> filterMap, List<Filter> filters, int offset, int limit) {
         Map<FilterType, String> likeMap = new HashMap<>(); // LIKE search
 
@@ -64,34 +75,24 @@ public class FilterUtill {
         return generateWhereClause(dto);
     }
 
+    // new ones
     public String generateWhereClause(FilterUtilDTO dto) {
-
-        var whereClause = "";
-        var prefix = " and ";
-        boolean requirePrefix = dto.getRequirePrefix();
+        String whereClause = "";
+        String prefix = dto.getRequirePrefix() ? " where " : " and ";
         List<Filter> filters = dto.getFilters();
         Map<FilterType, String> filterMap = dto.getFilterMap();
         Map<FilterType, String> likeMap = dto.getLikeMap();
-
-        if (requirePrefix) {
-            prefix = " where ";
-        }
 
         if (!filters.isEmpty()) {
             whereClause = filters.stream()
                     .map(filter -> {
                         String filterString = filterMap.getOrDefault(filter.getFilterType(), "");
                         if (likeMap.containsKey(filter.getFilterType())) {
-                            String newValue = "%" + filter.getValue() + "%";
-                            likeMap.put(filter.getFilterType(), newValue);
+                            likeMap.put(filter.getFilterType(), "%" + filter.getValue() + "%");
                         }
                         return Filter.convertFilterString(filter.getValue(), filterString);
                     })
                     .collect(Collectors.joining(" and ", prefix, ""));
-        }
-
-        if (whereClause.equals(" where ")) {
-            whereClause = "";
         }
 
         if (dto.getOffset() < 0 && dto.getLimit() < 0) {
@@ -100,19 +101,20 @@ public class FilterUtill {
 
         if (whereClause.equals(" where ")) {
             whereClause = """
-                        OFFSET ?
                         LIMIT ?
+                        OFFSET ?
                     """;
         } else {
             whereClause = whereClause + """
-                        OFFSET ?
                         LIMIT ?
+                        OFFSET ?
                     """;
         }
 
         return whereClause;
     }
 
+    // for old ones
     public void injectPreparedStatementValues(List<Filter> filters, int offset, int limit, PreparedStatement ps)
             throws SQLException {
         Map<FilterType, String> likeMap = new HashMap<>(); // LIKE search
@@ -122,30 +124,42 @@ public class FilterUtill {
         dto.setLimit(limit);
         dto.setOffset(offset);
         dto.setLikeMap(likeMap);
-        injectPreparedStatementValues(dto, ps);
+        FilterType type = null;
+        if (filters.size() > 0) {
+            type = filters.get(0).getFilterType();
+        }
+        if (type != FilterType.ID_LIST) {
+            injectPreparedStatementValues(dto, ps);
+        }
     }
 
+    // use this one for new
     public void injectPreparedStatementValues(FilterUtilDTO dto, PreparedStatement ps)
             throws SQLException {
-        var position = 1;
+        int position = 1;
         Map<FilterType, String> likeMap = dto.getLikeMap();
         List<Filter> filters = dto.getFilters();
 
-        for (int i = 0; i < filters.size(); i++) {
-            var values = filters.get(i).getValue().split(",");
-            for (var singleValue : values) {
-                if (likeMap.get(filters.get(i).getFilterType()) != null) {
-                    ps.setString(position, likeMap.get(filters.get(i).getFilterType()));
+        for (Filter filter : filters) {
+            String[] values = filter.getValue().split(",");
+            for (String value : values) {
+                if (likeMap.containsKey(filter.getFilterType())) {
+                    ps.setString(position++, likeMap.get(filter.getFilterType()));
                 } else {
-                    ps.setString(position, singleValue);
+                    if (filter.getFilterType() == FilterType.ID_LIST) {
+                        int intValue = Integer.parseInt(value);
+                        ps.setInt(position++, intValue);
+                    } else {
+                        ps.setString(position++, value);
+                    }
                 }
-                position++;
             }
         }
-        if (dto.getOffset() > -1 && dto.getLimit() > -1) {
+        if (dto.getLimit() > -1) {
+            ps.setInt(position++, dto.getLimit());
+        }
+        if (dto.getOffset() > -1) {
             ps.setInt(position, dto.getOffset());
-            position++;
-            ps.setInt(position, dto.getLimit());
         }
     }
 
