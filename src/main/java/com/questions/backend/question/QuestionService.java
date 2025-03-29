@@ -2,6 +2,7 @@ package com.questions.backend.question;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class QuestionService {
 
     public PaginationList<QuestionsDTO> findAllQuestions(int page, int limit, List<Filter> filters, String[] values) {
         try {
-            if (values.length > 0) {
+            if (Objects.nonNull(values) && values.length > 0) {
                 return questionRepository.query().findByIds(values)
                         .findAllPagination(limit * (page - 1), limit);
             } else {

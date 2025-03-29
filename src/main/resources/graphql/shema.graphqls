@@ -1,14 +1,10 @@
 
 type Query {
-    bookById(id: Int): Book
-    authors:[Author]
-    books:[Book]
     # me: User! @auth
 }
 
 type Mutation {
     # login( authProvider: AuthData!): AuthPayload!
-    addBooks(bookDto:BookDto):  [Book]
     submitAnswers(answers:[AnswerDto],userName:String):String
 }
 
@@ -16,26 +12,6 @@ schema {
   query: Query
   mutation: Mutation
 }
-
-type Book {
-    id: ID
-    name: String
-    pageCount: Int
-    author: Author
-}
-
-input BookDto {
-    id: ID
-    name: String
-    pageCount: Int
-    authorId: Int,
-}
-
-type Author {
-    id: ID
-    name: String
-}
-
 
 # for answer pool
 input AnswerDto{

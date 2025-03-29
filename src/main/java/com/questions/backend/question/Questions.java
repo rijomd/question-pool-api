@@ -34,7 +34,6 @@ public class Questions {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
     private Integer id;
 
     private String question_name;
